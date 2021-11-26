@@ -1,6 +1,7 @@
 package com.lbit.calculator;
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 import java.util.zip.CheckedInputStream;
 
 
@@ -15,36 +16,76 @@ public class Main {
         System.out.println("Калькулятор умеет работать только с целыми числами.");
         //read in cicle information
         try {
+            String calcResult;
+
             for (int n = 0; n <= 100; n++) {
                 // Reading data using readLine
 
                 System.out.print("Введите a + b: ");
                 Scanner scanner = new Scanner(System.in);
                 String inputString = scanner.nextLine();
-                classCalc myCalc = new classCalc();
-                String splitInput[] = inputString.split("\s");
+
+                // одно число
+                if (Pattern.matches("^([\\d&&[^0]]|I[XV]|V?I{0,3}|X)$",inputString)) {
+                    throw new Exception("//т.к. строка не является математической операцией");
+                }
+                //  три числа и более
+                if ((Pattern.matches("^([\\d&&[^0]]\\s[+\\-*/]\\s){2,}[\\d&&[^0]]$",inputString)) ||
+                        Pattern.matches("^((I[XV]|V?I{0,3}|X)\\s[+\\-*/]\\s){2,}(I[XV]|V?I{0,3}|X)$",inputString))   {
+                    throw new Exception("//т.к. формат математической операции не удовлетворяет заданию - два операнда и один оператор (+, -, /, *)" );
+                }
+
                 //rims only or arabic only (regex)
+                if ((Pattern.matches("^[\\d&&[^0]]\\s[+\\-*/]\\s(I[XV]|V?I{0,3}|X)$",inputString)) ||
+                (Pattern.matches("^(I[XV]|V?I{0,3}|X)\\s[+\\-*/]\\s[\\d&&[^0]]$",inputString))){
+                    throw new Exception("//т.к. используются одновременно разные системы счисления");
 
-                //chek operations ( + - * / )
+                }
+                //ошибка в формате или операции
+                if ((!Pattern.matches("^[\\d&&[^0]]\\s[+\\-*/]\\s[\\d&&[^0]]$",inputString)) &&
+                        (!Pattern.matches("^(I[XV]|V?I{0,3}|X)\\s[+\\-*/]\\s(I[XV]|V?I{0,3}|X)$",inputString)))   {
+                    throw new Exception("//т.к. формат математической операции не удовлетворяет заданию" );
+                }
 
-                //check maximum (1 to 10)  regexp
+                classCalc myCalc = new classCalc();
+                //parse string for operations
+                String[] splitInput = inputString.split("\s");
 
+                //rims true
+                if (Pattern.matches("^(I[XV]|V?I{0,3}|X)\\s[+\\-*/]\\s(I[XV]|V?I{0,3}|X)$",inputString)) {
+                    myCalc.rimsDigits = true;
+                    myCalc.a = classCalc.romanToArabic(splitInput[0]);
+                    myCalc.b = classCalc.romanToArabic(splitInput[2]);
+                }
+                else if (Pattern.matches("^[\\d&&[^0]]\\s[+\\-*/]\\s[\\d&&[^0]]$",inputString)) //arabic
+                {
 
-//rims to arabic
-
-
-                myCalc.a = Integer.parseInt(splitInput[0]);
-                myCalc.b = Integer.parseInt(splitInput[2]);
-
+                    myCalc.rimsDigits = false;
+                    myCalc.a = Integer.parseInt(splitInput[0]);
+                    myCalc.b = Integer.parseInt(splitInput[2]);
+                }
+                else
+                {
+                    throw new Exception("2. //т.к. формат математической операции не удовлетворяет заданию" );
+                }
 
                 myCalc.operation = splitInput[1].charAt(0);
-                myCalc.main();
-                System.out.println("String read from console is : \n" + myCalc.result);
 
+                //do operation
+                myCalc.main();
+
+                //reverse convert
+                if (myCalc.rimsDigits) {
+                     calcResult= classCalc.arabicToRoman(myCalc.result);
+                } else {
+                    //output
+                    calcResult= String.valueOf(myCalc.result);
+                }
+                System.out.println("String read from console is : \n" + calcResult);
             }
         }  //end try
         catch (Exception e ){
-            System.out.println("Ошибка 1" + e.getLocalizedMessage());
+            System.out.println("throw exception " + e.getLocalizedMessage());
 
 
         }
